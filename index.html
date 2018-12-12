@@ -28,6 +28,8 @@
 	<body>
 		<div id="info">
 		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - OBJLoader + MTLLoader
+		<input type="file" id="files" name="files[]" multiple />
+		<output id="list"></output>
 		</div>
 
 		<script src="three.js/build/three.js"></script>
@@ -40,14 +42,52 @@
 		<!-- <script src="/three.js/js/libs/stats.min.js"></script> -->
 
 		<script>
+			var reader;
+			//filepicker
+			function handleFileSelect(evt) {
+				var files = evt.target.files; // FileList object
+
+				// Loop through the FileList and render image files as thumbnails.
+				for (var i = 0, f; f = files[i]; i++) {
+
+				  // Only process image files.
+					//if (!f.type.match('image.*')) {
+					//	continue;
+				  	//}
+
+				  	reader = new FileReader();
+
+				  	// Closure to capture the file information.
+				 	reader.onload = (function(model) {
+						return function(e) {
+						//model = theFile;
+						init(reader.result);
+						animate();
+					  	// Render thumbnail.
+					  	//var span = document.createElement('span');
+					  	//span.innerHTML = ['<img class="thumb" src="', e.target.result,
+						//					'" title="', escape(theFile.name), '"/>'].join('');
+					  	//document.getElementById('list').insertBefore(span, null);
+						};
+				  	})(f);
+
+				  // Read in the image file as a data URL.
+				  //reader.readAsDataURL(f);
+				  reader.readAsText(f,'ISO-8859-1');
+				}
+			  }
+
+			document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+			//threejs
 			var container, stats;
 			var controls, camera, scene, renderer;
 			var mouseX = 0, mouseY = 0;
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
-			init();
-			animate();
-			function init() {
+			//init();
+			//animate();
+			function init(model) {
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
@@ -71,18 +111,26 @@
 				};
 				var onError = function () { };
 				//THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-				new THREE.MTLLoader()
-					.setPath( 'models/' )
-					.load( 'elantra f.mtl', function ( materials ) {
-						materials.preload();
-						new THREE.OBJLoader()
-							.setMaterials( materials )
-							.setPath( 'models/' )
-							.load( 'elantra f.obj', function ( object ) {
-								object.position.y = - 95;
-								scene.add( object );
-							}, onProgress, onError );
-					} );
+				//var fileRegex = /^\\(.+\\)*(.+)\.(.+)$/;
+				//console.log(model.name)
+				//var fileArr = model.name.match(fileRegex);
+				//new THREE.MTLLoader()
+				//	.setPath( 'models/' )
+					//.load( 'elantra f.mtl', function ( materials ) {
+				//	.load( 'elantra f.mtl', function ( materials ) {
+				//		materials.preload();
+						var object = new THREE.OBJLoader()
+							//.setMaterials( materials )
+							//.setPath( 'models/' )
+							//.setPath( model.webkitRelativePath )
+							//.load( 'elantra f.obj' , function ( object ) {
+							.parse(model)
+							scene.add( object );
+							//.load( model.name , function ( object ) {
+							//	object.position.y = - 95;
+							//	scene.add( object );
+							//}, onProgress, onError );
+				//	} );
 				//
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
